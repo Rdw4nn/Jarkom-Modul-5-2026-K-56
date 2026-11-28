@@ -250,6 +250,1083 @@ Jalur yang dilalui:
 **Dummy-Plug → Switch-Lab (192.239.4.48/29) → Ritsuko → Link Asuka-Ritsuko (192.239.4.156/30) → Asuka → Link Gendo-Asuka (192.239.4.116/30) → Gendo → Link Gendo-Shigeru (192.239.4.124/30) → Shigeru → Switch-Monolith (192.239.4.80/29) → Armisael.**
 
 ---
+
+# SOAL 2 | Geofront Gelap Gulita
+
+## Konfigurasi IP Address dan IP Forwarding
+
+Pada soal ini dilakukan konfigurasi IP address pada seluruh interface router berdasarkan pembagian subnet VLSM pada Soal 1. Seluruh interface yang digunakan diaktifkan dan IP forwarding diatur menjadi `1` agar router dapat meneruskan paket antarjaringan.
+
+Konfigurasi dilakukan menggunakan script `/root/no2.sh` pada masing-masing router dengan menyesuaikan IP address, prefix, dan interface berdasarkan topologi.
+
+### Konfigurasi Router
+
+Sebagai contoh, berikut konfigurasi `no2.sh` pada router Fuyutsuki:
+
+```sh
+#!/bin/sh
+
+# Modul 5 - Soal Nomor 2
+# Router: Fuyutsuki
+
+ip link set eth0 up
+ip addr replace 192.239.4.122/30 dev eth0
+
+ip link set eth1 up
+ip addr replace 192.239.4.57/29 dev eth1
+
+ip link set eth2 up
+ip addr replace 192.239.4.161/30 dev eth2
+
+ip link set eth3 up
+ip addr replace 192.239.4.165/30 dev eth3
+
+sysctl -w net.ipv4.ip_forward=1
+```
+
+Konfigurasi pada router Toji:
+
+```sh
+#!/bin/sh
+set -e
+
+# Modul 5 - Soal Nomor 2
+# Router: Toji
+
+ip link set eth0 up
+ip addr replace 192.239.4.166/30 dev eth0
+
+ip link set eth1 up
+ip addr replace 192.239.4.73/29 dev eth1
+
+sysctl -w net.ipv4.ip_forward=1
+```
+
+Script dengan konfigurasi yang disesuaikan diterapkan pada seluruh 17 router.
+
+```sh
+chmod +x /root/no2.sh
+./no2.sh
+```
+
+Perintah yang digunakan memiliki fungsi sebagai berikut:
+
+| Perintah | Fungsi |
+|---|---|
+| `ip link set ethX up` | Mengaktifkan interface jaringan |
+| `ip addr replace` | Memberikan alamat IP dan prefix pada interface |
+| `sysctl -w net.ipv4.ip_forward=1` | Mengaktifkan penerusan paket antar-interface |
+
+### Konfigurasi DHCP Gendou
+
+Interface `eth0` pada router Gendou terhubung langsung dengan NAT1 dan memperoleh alamat IP secara dinamis melalui DHCP.
+
+Pemeriksaan dilakukan menggunakan:
+
+```sh
+ip -br a
+ip route
+```
+
+### Pembuktian
+
+Verifikasi konfigurasi IP address dan IP forwarding dilakukan pada masing-masing router menggunakan:
+
+```sh
+ip -br a
+sysctl net.ipv4.ip_forward
+```
+
+![Konfigurasi IP Address Router Fuyutsuki](screenshots/no2_fuyutsuki.png)
+
+Pengujian konektivitas dilakukan dua arah pada seluruh 16 link antar-router.
+
+| ID | Link Antar-Router | IP Router Pertama | IP Router Kedua |
+|---|---|---|---|
+| A18 | Gendou - Yui | 192.239.4.109 | 192.239.4.110 |
+| A19 | Gendou - Hikari | 192.239.4.113 | 192.239.4.114 |
+| A20 | Gendou - Asuka | 192.239.4.117 | 192.239.4.118 |
+| A21 | Gendou - Fuyutsuki | 192.239.4.121 | 192.239.4.122 |
+| A22 | Gendou - Shigeru | 192.239.4.125 | 192.239.4.126 |
+| A23 | Gendou - Kaji | 192.239.4.129 | 192.239.4.130 |
+| A24 | Gendou - Misato | 192.239.4.133 | 192.239.4.134 |
+| A25 | Yui - Mari | 192.239.4.137 | 192.239.4.138 |
+| A26 | Yui - Rei | 192.239.4.141 | 192.239.4.142 |
+| A27 | Yui - Shinji | 192.239.4.145 | 192.239.4.146 |
+| A28 | Hikari - Kaworu | 192.239.4.149 | 192.239.4.150 |
+| A29 | Asuka - Kensuke | 192.239.4.153 | 192.239.4.154 |
+| A30 | Asuka - Ritsuko | 192.239.4.157 | 192.239.4.158 |
+| A31 | Fuyutsuki - Maya | 192.239.4.161 | 192.239.4.162 |
+| A32 | Fuyutsuki - Toji | 192.239.4.165 | 192.239.4.166 |
+| A33 | Shigeru - Makoto | 192.239.4.169 | 192.239.4.170 |
+
+Pengujian pada masing-masing router dilakukan menggunakan perintah `ping -c 3` menuju IP router tetangga.
+
+Sebagai contoh, pengujian pada Gendou:
+
+```sh
+ping -c 3 192.239.4.110
+ping -c 3 192.239.4.114
+ping -c 3 192.239.4.118
+ping -c 3 192.239.4.122
+ping -c 3 192.239.4.126
+ping -c 3 192.239.4.130
+ping -c 3 192.239.4.134
+```
+
+Setiap link diuji dari kedua ujungnya dengan target `0% packet loss`.
+
+![Pengujian Ping Antar-Router Yui](screenshots/no2_yui.png)
+
+---
+
+# SOAL 3 | Pulau-Pulau yang Terpisah
+
+## Konfigurasi Static Routing
+
+Pada soal ini dilakukan konfigurasi static routing agar seluruh subnet dapat saling berkomunikasi dengan jumlah routing entry sesedikit mungkin.
+
+Router Gendou berperan sebagai router pusat dengan default route menuju NAT1. Router cabang menggunakan default route menuju router induknya dan static route menuju subnet yang berada di bawahnya.
+
+### Pemetaan Default Route
+
+| Router | Router Induk | Next Hop |
+|---|---|---|
+| Yui | Gendou | 192.239.4.109 |
+| Hikari | Gendou | 192.239.4.113 |
+| Asuka | Gendou | 192.239.4.117 |
+| Fuyutsuki | Gendou | 192.239.4.121 |
+| Shigeru | Gendou | 192.239.4.125 |
+| Kaji | Gendou | 192.239.4.129 |
+| Misato | Gendou | 192.239.4.133 |
+| Mari | Yui | 192.239.4.137 |
+| Rei | Yui | 192.239.4.141 |
+| Shinji | Yui | 192.239.4.145 |
+| Kaworu | Hikari | 192.239.4.149 |
+| Kensuke | Asuka | 192.239.4.153 |
+| Ritsuko | Asuka | 192.239.4.157 |
+| Maya | Fuyutsuki | 192.239.4.161 |
+| Toji | Fuyutsuki | 192.239.4.165 |
+| Makoto | Shigeru | 192.239.4.169 |
+
+### Konfigurasi Script `no3.sh`
+
+Static routing diterapkan menggunakan script `/root/no3.sh` pada masing-masing router.
+
+Berikut konfigurasi routing Shigeru berdasarkan routing table yang digunakan:
+
+```sh
+#!/bin/sh
+set -e
+
+ip route replace default via 192.239.4.125 dev eth0
+
+ip route replace 192.239.4.88/29 via 192.239.4.170 dev eth2
+```
+
+Default route Shigeru diarahkan menuju Gendou. Static route menuju subnet Switch-Radar diarahkan melalui Makoto.
+
+Konfigurasi routing Fuyutsuki:
+
+```sh
+#!/bin/sh
+set -e
+
+ip route replace default via 192.239.4.121 dev eth0
+
+ip route replace 192.239.3.192/27 via 192.239.4.162 dev eth2
+
+ip route replace 192.239.4.72/29 via 192.239.4.166 dev eth3
+```
+
+Fuyutsuki memiliki default route menuju Gendou dan static route menuju jaringan Switch-Medic melalui Maya serta Switch-Dogma melalui Toji.
+
+Perintah `ip route replace` digunakan agar konfigurasi dapat diterapkan kembali tanpa menghasilkan duplikasi routing entry.
+
+Script dijalankan pada masing-masing router:
+
+```sh
+chmod +x /root/no3.sh
+./no3.sh
+```
+
+### Pembuktian
+
+Verifikasi routing table dilakukan pada router pusat dan router cabang menggunakan:
+
+```sh
+ip route
+```
+
+Routing table aktual pada Shigeru:
+
+```text
+default via 192.239.4.125 dev eth0
+192.239.4.80/29 dev eth1 proto kernel scope link src 192.239.4.81
+192.239.4.88/29 via 192.239.4.170 dev eth2
+192.239.4.124/30 dev eth0 proto kernel scope link src 192.239.4.126
+192.239.4.168/30 dev eth2 proto kernel scope link src 192.239.4.169
+```
+
+### Pengujian Konektivitas Antar-Subnet
+
+Pengujian dilakukan dari Armisael menuju Lilith, Sachiel, dan Comm-Net.
+
+| Node | IP Address | Gateway |
+|---|---|---|
+| Armisael | 192.239.4.83/29 | 192.239.4.81 |
+| Lilith | 192.239.4.74/29 | 192.239.4.73 |
+| Sachiel | 192.239.3.130/26 | 192.239.3.129 |
+| Comm-Net | 192.239.2.2/24 | 192.239.2.1 |
+
+Alamat Comm-Net disesuaikan dengan konfigurasi aktual host.
+
+Pada Armisael:
+
+```sh
+ping -c 3 192.239.4.74
+ping -c 3 192.239.3.130
+ping -c 3 192.239.2.2
+```
+
+Jalur routing yang dilalui:
+
+| Tujuan | Jalur |
+|---|---|
+| Lilith | Armisael - Shigeru - Gendou - Fuyutsuki - Toji - Lilith |
+| Sachiel | Armisael - Shigeru - Gendou - Asuka - Kensuke - Sachiel |
+| Comm-Net | Armisael - Shigeru - Gendou - Hikari - Comm-Net |
+
+Hasil yang diharapkan adalah ketiga tujuan dapat dijangkau dengan `0% packet loss`.
+
+![Pengujian Static Routing](screenshots/no3_armisael.png)
+
+---
+
+# SOAL 4 | Haus Kabar dari Dunia Luar
+
+## Konfigurasi Network Address Translation (NAT)
+
+Pada soal ini dilakukan konfigurasi NAT pada router Gendou agar seluruh jaringan internal dapat mengakses internet melalui NAT1.
+
+Target `MASQUERADE` digunakan karena alamat IP eksternal Gendou diperoleh secara dinamis melalui DHCP sehingga dapat berubah sewaktu-waktu.
+
+### Rancangan NAT
+
+| Parameter | Konfigurasi |
+|---|---|
+| Router | Gendou |
+| Source Network | 192.239.0.0/21 |
+| Interface Eksternal | eth0 |
+| Tabel | nat |
+| Chain | POSTROUTING |
+| Target | MASQUERADE |
+
+### Konfigurasi NAT Gendou
+
+Aturan utama NAT yang digunakan:
+
+```sh
+iptables -t nat -A POSTROUTING \
+-s 192.239.0.0/21 -o eth0 -j MASQUERADE
+```
+
+Rule tersebut menerjemahkan alamat sumber paket dari jaringan internal `192.239.0.0/21` hanya ketika paket keluar melalui interface `eth0` menuju NAT1.
+
+Konfigurasi NAT yang telah dibuat diperiksa melalui script:
+
+```sh
+cat /root/no4.sh
+```
+
+Apabila rule belum aktif, jalankan script konfigurasi NAT yang sesuai:
+
+```sh
+./no4.sh
+```
+
+### Pembuktian
+
+#### Counter Awal NAT
+
+Pada Gendou:
+
+```sh
+iptables -t nat -S
+iptables -t nat -L POSTROUTING -n -v
+```
+
+#### Pengujian Internet dari Armisael
+
+```sh
+ping -c 3 8.8.8.8
+ping -c 3 deb.debian.org
+```
+
+#### Pengujian Internet dari Lilith
+
+```sh
+ping -c 3 8.8.8.8
+ping -c 3 deb.debian.org
+```
+
+Pengujian menuju `8.8.8.8` digunakan untuk membuktikan konektivitas internet melalui alamat IP. Pengujian menuju `deb.debian.org` digunakan untuk membuktikan bahwa resolusi DNS juga berfungsi.
+
+#### Counter NAT Setelah Pengujian
+
+Kembali pada Gendou:
+
+```sh
+iptables -t nat -L POSTROUTING -n -v
+```
+
+Kolom `pkts` dan `bytes` pada rule MASQUERADE diharapkan meningkat setelah koneksi baru dari jaringan internal diproses melalui NAT.
+
+![Pengujian Internet dan Counter NAT](screenshots/no4_gendou_lilith.png)
+
+---
+
+# SOAL 5 | Pintu Depan Dikunci Rapat
+
+## Konfigurasi Firewall Gendou
+
+Pada soal ini diterapkan firewall pada router Gendou menggunakan iptables dengan prinsip default deny, yaitu menolak trafik masuk dan trafik forwarding yang tidak memenuhi aturan yang ditentukan.
+
+### Rancangan Kebijakan Firewall
+
+| Chain | Default Policy | Keterangan |
+|---|---|---|
+| INPUT | DROP | Menolak paket yang ditujukan kepada Gendou kecuali diizinkan |
+| FORWARD | DROP | Menolak paket yang melewati Gendou kecuali diizinkan |
+| OUTPUT | ACCEPT | Mengizinkan paket yang berasal dari Gendou |
+
+### Konfigurasi Script `gendo.sh`
+
+Firewall diterapkan pada Gendou menggunakan script `/root/gendo.sh`.
+
+```sh
+chmod +x /root/gendo.sh
+./gendo.sh
+```
+
+Berikut aturan firewall yang digunakan berdasarkan konfigurasi aktif pada Gendou:
+
+```sh
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+iptables -A INPUT \
+-m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+iptables -A INPUT -i lo -j ACCEPT
+
+iptables -A INPUT -i eth0 \
+-p udp --sport 67 --dport 68 -j ACCEPT
+
+iptables -A INPUT \
+-s 192.239.0.0/21 ! -i eth0 -j ACCEPT
+
+iptables -A FORWARD \
+-m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+iptables -A FORWARD \
+-s 192.239.0.0/21 ! -i eth0 -o eth0 -j ACCEPT
+
+iptables -A FORWARD \
+-s 192.239.0.0/21 -d 192.239.0.0/21 \
+! -i eth0 ! -o eth0 -j ACCEPT
+```
+
+### Penjelasan Aturan Firewall
+
+| Chain | Rule | Fungsi |
+|---|---|---|
+| INPUT | ESTABLISHED,RELATED | Mengizinkan paket balasan dari koneksi yang telah terbentuk |
+| INPUT | Interface lo | Mengizinkan komunikasi melalui loopback |
+| INPUT | UDP source 67 destination 68 | Mengizinkan balasan DHCP dari NAT1 |
+| INPUT | Internal, bukan dari eth0 | Mengizinkan jaringan internal mengakses Gendou |
+| FORWARD | ESTABLISHED,RELATED | Mengizinkan paket balasan melewati router |
+| FORWARD | Internal menuju eth0 | Mengizinkan jaringan internal mengakses internet |
+| FORWARD | Internal menuju internal | Mengizinkan komunikasi antar-subnet internal |
+
+### Pembuktian
+
+Pada Gendou:
+
+```sh
+iptables -S
+```
+
+Hasil pengujian:
+
+```text
+-P INPUT DROP
+-P FORWARD DROP
+-P OUTPUT ACCEPT
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i eth0 -p udp -m udp --sport 67 --dport 68 -j ACCEPT
+-A INPUT -s 192.239.0.0/21 ! -i eth0 -j ACCEPT
+-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s 192.239.0.0/21 ! -i eth0 -o eth0 -j ACCEPT
+-A FORWARD -s 192.239.0.0/21 -d 192.239.0.0/21 ! -i eth0 ! -o eth0 -j ACCEPT
+```
+
+![Konfigurasi Firewall Gendou](screenshots/no5_gendou.png)
+
+Pengujian akses internet dilakukan pada Armisael:
+
+```sh
+ping -c 3 8.8.8.8
+```
+
+Meskipun default policy INPUT dan FORWARD menggunakan DROP, jaringan internal tetap diizinkan mengakses internet melalui aturan ACCEPT yang telah ditentukan.
+
+![Pengujian Internet Setelah Firewall](screenshots/no5_armisael.png)
+
+---
+
+# SOAL 6 | Alamat Para Pilot
+
+## Konfigurasi IP Statis pada Node Non-Router
+
+Pada soal ini dilakukan konfigurasi IP address statis dan default gateway pada seluruh node non-router berdasarkan pembagian subnet VLSM.
+
+Konfigurasi disimpan pada script `/root/no6.sh` masing-masing node dengan alamat IP dan gateway yang berbeda sesuai subnet.
+
+### Pemetaan Alamat IP Host
+
+| Node | IP Address | Gateway |
+|---|---|---|
+| Unit-01 | 192.239.4.66/29 | 192.239.4.65 |
+| Unit-02 | 192.239.4.67/29 | 192.239.4.65 |
+| Unit-00 | 192.239.4.68/29 | 192.239.4.65 |
+| Lilith | 192.239.4.74/29 | 192.239.4.73 |
+| Adam | 192.239.4.75/29 | 192.239.4.73 |
+| Magi-Casper | 192.239.4.58/29 | 192.239.4.57 |
+| Magi-Balthasar | 192.239.4.59/29 | 192.239.4.57 |
+| Magi-Melchior | 192.239.4.60/29 | 192.239.4.57 |
+| Zeruel | 192.239.4.82/29 | 192.239.4.81 |
+| Armisael | 192.239.4.83/29 | 192.239.4.81 |
+| Entry-Plug | 192.239.4.50/29 | 192.239.4.49 |
+| Dummy-Plug | 192.239.4.51/29 | 192.239.4.49 |
+| Spy | 192.239.4.102/30 | 192.239.4.101 |
+| Tokyo3-Core | 192.239.4.106/30 | 192.239.4.105 |
+| Pen-Pen | 192.239.3.195/27 | 192.239.3.193 |
+| Sachiel | 192.239.3.130/26 | 192.239.3.129 |
+
+Node non-router lainnya dikonfigurasi sesuai tabel VLSM pada Soal 1.
+
+### Konfigurasi Script `no6.sh`
+
+Contoh konfigurasi IP statis pada Unit-01:
+
+```sh
+#!/bin/sh
+set -e
+
+# Modul 5 - Soal Nomor 6
+# Node: Unit-01
+
+ip link set eth0 up
+ip addr replace 192.239.4.66/29 dev eth0
+ip route replace default via 192.239.4.65 dev eth0
+```
+
+Konfigurasi pada Magi-Casper:
+
+```sh
+#!/bin/sh
+set -e
+
+ip link set eth0 up
+ip addr replace 192.239.4.58/29 dev eth0
+ip route replace default via 192.239.4.57 dev eth0
+```
+
+Konfigurasi serupa diterapkan pada seluruh node non-router dengan menyesuaikan alamat IP, prefix, dan default gateway.
+
+```sh
+chmod +x /root/no6.sh
+./no6.sh
+```
+
+Script disimpan pada masing-masing node untuk memudahkan penerapan ulang konfigurasi.
+
+### Pembuktian
+
+Pengujian dilakukan pada Unit-01 yang berada pada subnet Switch-Cage `192.239.4.64/29`.
+
+```sh
+ip -br a
+ip route
+ping -c 3 192.239.4.65
+```
+
+Perintah `ip -br a` digunakan untuk menampilkan IP address, sedangkan `ip route` digunakan untuk memastikan default gateway mengarah menuju Misato.
+
+Ping menuju `192.239.4.65` digunakan untuk membuktikan konektivitas Unit-01 dengan gateway.
+
+![Konfigurasi IP Statis Unit-01](screenshots/no6_unit-01_1.png)
+
+![Pengujian Gateway Unit-01](screenshots/no6_unit-01_2.png)
+
+Untuk membuktikan sifat permanen konfigurasi, IP address dan default gateway perlu tetap tersedia setelah node di-restart tanpa menjalankan script secara manual.
+
+---
+
+# SOAL 7 | Membangunkan MAGI
+
+## Instalasi Tools dan Pengujian TCP Listener
+
+Pada soal ini dilakukan instalasi `iptables` dan `netcat-traditional` pada ketiga server MAGI untuk menjalankan TCP listener. Pengujian dilakukan dengan mengirimkan pesan dari Lilith menuju masing-masing server.
+
+### Rancangan Layanan MAGI
+
+| Node | IP Address | Port TCP |
+|---|---|---|
+| Magi-Casper | 192.239.4.58 | 5000 |
+| Magi-Balthasar | 192.239.4.59 | 5001 |
+| Magi-Melchior | 192.239.4.60 | 5000 |
+| Lilith | 192.239.4.74 | Client |
+
+### Instalasi Package
+
+Instalasi package pada Magi-Casper dilakukan menggunakan script `/root/casper.sh`.
+
+```sh
+#!/bin/sh
+set -e
+
+# Modul 5 - Soal Nomor 7
+# Node: Magi-Casper
+
+apt-get update
+apt-get install -y iptables netcat-traditional
+```
+
+Jalankan script:
+
+```sh
+./casper.sh
+```
+
+Pada pengerjaan awal, instalasi package mengalami kegagalan DNS. Konfigurasi jaringan diaktifkan kembali menggunakan:
+
+```sh
+./no6.sh
+```
+
+Selanjutnya dilakukan instalasi:
+
+```sh
+apt update
+apt install -y iptables netcat-traditional
+```
+
+Meskipun repository Debian Security sempat mengalami kegagalan verifikasi signature, package `netcat-traditional` berhasil diinstal menggunakan daftar package repository utama yang telah terunduh.
+
+Instalasi yang sama dilakukan pada Magi-Balthasar dan Magi-Melchior.
+
+Verifikasi instalasi:
+
+```sh
+command -v nc.traditional
+iptables --version
+```
+
+Hasil:
+
+```text
+/usr/bin/nc.traditional
+iptables v1.8.11 (nf_tables)
+```
+
+Pada Lilith, instalasi Netcat dilakukan menggunakan:
+
+```sh
+apt install -y netcat-traditional
+```
+
+### Konfigurasi TCP Listener
+
+#### Magi-Casper
+
+```sh
+nc.traditional -l -p 5000
+```
+
+#### Magi-Balthasar
+
+```sh
+nc.traditional -l -p 5001
+```
+
+#### Magi-Melchior
+
+```sh
+nc.traditional -l -p 5000
+```
+
+Ketiga listener dijalankan pada terminal masing-masing server untuk menunggu koneksi TCP dari Lilith.
+
+### Pembuktian
+
+Pengiriman pesan dilakukan dari Lilith menggunakan:
+
+```sh
+echo "Hello Casper from Lilith" | nc.traditional -q 1 -w 3 192.239.4.58 5000
+
+echo "Hello Balthasar from Lilith" | nc.traditional -q 1 -w 3 192.239.4.59 5001
+
+echo "Hello Melchior from Lilith" | nc.traditional -q 1 -w 3 192.239.4.60 5000
+```
+
+Pesan yang diharapkan muncul pada masing-masing terminal listener:
+
+| Server | Pesan |
+|---|---|
+| Magi-Casper | Hello Casper from Lilith |
+| Magi-Balthasar | Hello Balthasar from Lilith |
+| Magi-Melchior | Hello Melchior from Lilith |
+
+Pada pengujian awal, koneksi menuju port 5001 Magi-Balthasar sempat menghasilkan `Connection refused`. Listener kemudian perlu diaktifkan kembali pada port 5001 sebelum pengiriman pesan dilakukan ulang.
+
+![Pengiriman Pesan dari Lilith](screenshots/no7_lilith.png)
+
+![Penerimaan Pesan pada Magi-Casper](screenshots/no7_magi-casper.png)
+
+![Penerimaan Pesan pada Magi-Balthasar](screenshots/no7_magi-balthasar.png)
+
+![Penerimaan Pesan pada Magi-Melchior](screenshots/no7_magi-melchior.png)
+
+---
+
+# SOAL 8 | Mengenali Kondisi Normal
+
+## Konfigurasi Baseline Service
+
+Pada soal ini dilakukan konfigurasi layanan TCP pada Pen-Pen dan Tokyo3-Core sebagai kondisi normal sebelum penerapan firewall.
+
+Pen-Pen menjalankan layanan TCP port 80, sedangkan Tokyo3-Core menjalankan layanan TCP port 80 dan 8080.
+
+### Rancangan Layanan
+
+| Node | IP Address | Port | Respons |
+|---|---|---|---|
+| Pen-Pen | 192.239.3.195 | 80 | Welcome to Pen-Pen |
+| Tokyo3-Core | 192.239.4.106 | 80 | Welcome to Tokyo3-Core |
+| Tokyo3-Core | 192.239.4.106 | 8080 | syifa imutz |
+| Pen-Pen | 192.239.3.195 | 22 | Connection refused |
+| Tokyo3-Core | 192.239.4.106 | 22 | Connection refused |
+
+### Konfigurasi Pen-Pen
+
+Konfigurasi dilakukan menggunakan script `/root/no8.sh` pada Pen-Pen.
+
+```sh
+./no6.sh
+./no8.sh
+```
+
+Script melakukan instalasi `netcat-traditional` dan menjalankan listener TCP port 80 secara berulang untuk memberikan respons `Welcome to Pen-Pen`.
+
+Output listener:
+
+```text
+listening on [any] 80 ...
+connect to [192.239.3.195] from (UNKNOWN) [192.239.4.74] 33270
+listening on [any] 80 ...
+```
+
+![Listener Pen-Pen 1](screenshots/no8_pen-pen_1.png)
+
+![Listener Pen-Pen 2](screenshots/no8_pen-pen_2.png)
+
+### Konfigurasi Tokyo3-Core
+
+Pada Tokyo3-Core:
+
+```sh
+./no6.sh
+./no8.sh
+```
+
+Script menjalankan dua listener TCP secara bersamaan pada port 80 dan 8080.
+
+Port 80 memberikan respons `Welcome to Tokyo3-Core`, sedangkan port 8080 memberikan respons `syifa imutz`.
+
+Output listener:
+
+```text
+listening on [any] 8080 ...
+listening on [any] 80 ...
+connect to [192.239.4.106] from (UNKNOWN) [192.239.4.74] 56838
+listening on [any] 80 ...
+connect to [192.239.4.106] from (UNKNOWN) [192.239.4.74] 41666
+listening on [any] 8080 ...
+```
+
+### Pembuktian
+
+Pengujian dilakukan dari Lilith menggunakan Netcat.
+
+```sh
+nc.traditional -w 3 192.239.3.195 80
+
+nc.traditional -w 3 192.239.4.106 80
+
+nc.traditional -w 3 192.239.4.106 8080
+
+nc.traditional -vz -w 3 192.239.3.195 22
+
+nc.traditional -vz -w 3 192.239.4.106 22
+```
+
+Hasil pengujian:
+
+```text
+Welcome to Pen-Pen
+
+Welcome to Tokyo3-Core
+
+syifa imutz
+
+192.239.3.195: inverse host lookup failed: Host name lookup failure
+(UNKNOWN) [192.239.3.195] 22 (ssh) : Connection refused
+
+192.239.4.106: inverse host lookup failed: Host name lookup failure
+(UNKNOWN) [192.239.4.106] 22 (ssh) : Connection refused
+```
+
+| Pengujian | Hasil Aktual | Status |
+|---|---|---|
+| Lilith - Pen-Pen port 80 | Welcome to Pen-Pen | Berhasil |
+| Lilith - Tokyo3-Core port 80 | Welcome to Tokyo3-Core | Berhasil |
+| Lilith - Tokyo3-Core port 8080 | syifa imutz | Berhasil |
+| Lilith - Pen-Pen port 22 | Connection refused | Berhasil |
+| Lilith - Tokyo3-Core port 22 | Connection refused | Berhasil |
+
+Port 80 dan 8080 memberikan respons karena terdapat TCP listener yang aktif. Port 22 langsung memberikan `Connection refused` karena tidak terdapat layanan yang menerima koneksi atau koneksi ditolak secara aktif.
+
+Pesan `inverse host lookup failed` tidak memengaruhi hasil pengujian karena koneksi dilakukan menggunakan alamat IP secara langsung.
+
+![Pengujian Baseline Service dari Lilith](screenshots/no8_lilith.png)
+
+---
+
+# SOAL 9 | Jalur Belakang Diutak-atik
+
+## Sabotase dan Perbaikan Routing Shigeru
+
+Pada soal ini dilakukan troubleshooting terhadap gangguan routing pada Shigeru yang menyebabkan Lilith tidak dapat berkomunikasi dengan Armisael.
+
+### Pemetaan Node Terkait
+
+| Node | IP Address | Keterangan |
+|---|---|---|
+| Lilith | 192.239.4.74/29 | Host penguji |
+| Armisael | 192.239.4.83/29 | Host tujuan |
+| Shigeru eth0 | 192.239.4.126/30 | Interface menuju Gendou |
+| Shigeru eth1 | 192.239.4.81/29 | Gateway Switch-Monolith |
+| Shigeru eth2 | 192.239.4.169/30 | Interface menuju Makoto |
+| Gendou | 192.239.4.125/30 | Default next hop Shigeru |
+| Makoto | 192.239.4.170/30 | Next hop Switch-Radar |
+
+### Eksekusi Script Sabotase
+
+Pada Shigeru:
+
+```sh
+./break_routing.sh
+```
+
+Script sabotase dijalankan tanpa membaca isi file sesuai ketentuan soal.
+
+### Pengujian Sebelum Perbaikan
+
+Pada Lilith:
+
+```sh
+ping -c 3 192.239.4.83
+```
+
+Pada Armisael:
+
+```sh
+ping -c 3 192.239.4.81
+```
+
+Kondisi yang diharapkan setelah sabotase:
+
+| Pengujian | Hasil |
+|---|---|
+| Lilith menuju Armisael | Gagal |
+| Armisael menuju gateway Shigeru | Berhasil |
+
+Armisael tetap dapat menjangkau gateway karena keduanya berada dalam satu subnet sehingga tidak membutuhkan penerusan paket antarjaringan.
+
+### Identifikasi Gangguan Routing
+
+Pemeriksaan dilakukan pada Shigeru menggunakan:
+
+```sh
+ip -br a
+sysctl net.ipv4.ip_forward
+ip route
+ip rule
+ip route show table 100
+```
+
+Pemeriksaan difokuskan pada kemungkinan gangguan berikut:
+
+| Konfigurasi | Gangguan yang Diperiksa | Dampak |
+|---|---|---|
+| IP forwarding | Forwarding bernilai 0 | Paket tidak diteruskan antar-interface |
+| Default route | Next hop tidak mengarah ke Gendou | Paket salah diarahkan |
+| Blackhole route | Rute menuju subnet Dogma dibuang | Paket tidak dapat mencapai Lilith |
+| Policy routing | Unreachable route pada table 100 | Paket yang sesuai policy tidak dapat diteruskan |
+
+Temuan aktual disesuaikan dengan hasil enumerasi Shigeru setelah script sabotase dijalankan.
+
+![Identifikasi Gangguan Routing Shigeru](screenshots/no9_shigeru_before.png)
+
+### Perbaikan Routing
+
+Perbaikan dilakukan menggunakan script `/root/no9.sh` pada Shigeru.
+
+```sh
+cat /root/no9.sh
+./no9.sh
+```
+
+Konfigurasi routing utama dikembalikan menjadi:
+
+```sh
+sysctl -w net.ipv4.ip_forward=1
+
+ip route replace default via 192.239.4.125 dev eth0
+
+ip route replace 192.239.4.88/29 via 192.239.4.170 dev eth2
+```
+
+Rute blackhole dan policy routing yang mengganggu komunikasi dihapus apabila ditemukan pada tahap enumerasi.
+
+### Pembuktian Setelah Perbaikan
+
+Pada Shigeru:
+
+```sh
+sysctl net.ipv4.ip_forward
+ip route
+ip rule
+ip route show table 100
+```
+
+Konfigurasi normal Shigeru:
+
+```text
+net.ipv4.ip_forward = 1
+
+default via 192.239.4.125 dev eth0
+192.239.4.80/29 dev eth1
+192.239.4.88/29 via 192.239.4.170 dev eth2
+192.239.4.124/30 dev eth0
+192.239.4.168/30 dev eth2
+```
+
+![Konfigurasi Routing Setelah Perbaikan](screenshots/no9_shigeru_after.png)
+
+Pengujian kembali dilakukan dari Lilith:
+
+```sh
+ping -c 3 192.239.4.83
+```
+
+Hasil yang diharapkan setelah perbaikan adalah Lilith dapat kembali berkomunikasi dengan Armisael dengan `0% packet loss`.
+
+![Pengujian Lilith Menuju Armisael 1](screenshots/no9_lilith_1.png)
+
+![Pengujian Lilith Menuju Armisael 2](screenshots/no9_lilith_2.png)
+
+---
+
+# SOAL 10 | Para Pilot Terkunci di Dalam
+
+## Sabotase dan Perbaikan NAT
+
+Pada soal ini dilakukan troubleshooting terhadap gangguan NAT pada Misato dan Gendou yang menyebabkan jaringan Cage tidak dapat mengakses internet, sedangkan jaringan Intel tetap dapat mengakses internet.
+
+### Pemetaan Node Terkait
+
+| Node | IP Address | Keterangan |
+|---|---|---|
+| Unit-01 | 192.239.4.66/29 | Host jaringan Cage |
+| Misato | 192.239.4.65/29 | Gateway jaringan Cage |
+| Spy | 192.239.4.102/30 | Host jaringan Intel |
+| Kaji | 192.239.4.101/30 | Gateway jaringan Intel |
+| Lilith | 192.239.4.74/29 | Host jaringan internal |
+| Gendou | DHCP pada eth0 | Router NAT |
+
+### Eksekusi Script Sabotase
+
+Script `break_nat.sh` dijalankan pada kedua router yang terdampak.
+
+Pada Misato:
+
+```sh
+./break_nat.sh
+```
+
+Pada Gendou:
+
+```sh
+./break_nat.sh
+```
+
+### Pengujian Sebelum Perbaikan
+
+Pada Unit-01:
+
+```sh
+ping -c 3 8.8.8.8
+ping -c 3 192.239.4.74
+```
+
+Pada Spy:
+
+```sh
+ping -c 3 8.8.8.8
+```
+
+Kondisi yang diharapkan setelah sabotase:
+
+| Pengujian | Hasil |
+|---|---|
+| Unit-01 menuju 8.8.8.8 | Gagal |
+| Unit-01 menuju Lilith | Berhasil |
+| Spy menuju 8.8.8.8 | Berhasil |
+
+Pengujian tersebut digunakan untuk membuktikan bahwa gangguan hanya memengaruhi akses internet jaringan Cage, bukan seluruh konektivitas jaringan internal.
+
+### Identifikasi Gangguan NAT
+
+Pemeriksaan dilakukan pada Misato dan Gendou menggunakan:
+
+```sh
+iptables -t nat -S
+iptables -t nat -L POSTROUTING -n -v
+```
+
+Pemeriksaan difokuskan pada aturan SNAT, RETURN, dan MASQUERADE yang terdapat pada chain POSTROUTING.
+
+| Router | Gangguan yang Diperiksa | Dampak |
+|---|---|---|
+| Misato | Rule SNAT yang tidak sesuai | Alamat sumber paket jaringan Cage berubah secara tidak semestinya |
+| Gendou | Rule RETURN sebelum MASQUERADE | Trafik Cage melewati proses translasi NAT |
+
+Aturan yang menyebabkan gangguan diidentifikasi berdasarkan output aktual tabel NAT setelah sabotase.
+
+![Identifikasi Gangguan NAT](screenshots/no10_misato_before.png)
+
+### Perbaikan NAT pada Misato
+
+Perbaikan dilakukan menggunakan script `/root/no10.sh` pada Misato:
+
+```sh
+cat /root/no10.sh
+./no10.sh
+```
+
+Script digunakan untuk menghapus aturan NAT yang tidak semestinya sehingga Misato kembali meneruskan trafik tanpa melakukan translasi alamat sumber yang tidak diperlukan.
+
+Verifikasi:
+
+```sh
+iptables -t nat -S
+```
+
+![Perbaikan NAT pada Misato](screenshots/no10_misato_after.png)
+
+### Perbaikan NAT pada Gendou
+
+Pada Gendou:
+
+```sh
+cat /root/no10.sh
+./no10.sh
+```
+
+Konfigurasi NAT yang harus tersedia setelah perbaikan:
+
+```sh
+iptables -t nat -A POSTROUTING \
+-s 192.239.0.0/21 -o eth0 -j MASQUERADE
+```
+
+Rule tersebut merupakan aturan NAT yang digunakan pada Soal 4. Aturan tidak ditambahkan ulang apabila sudah tersedia.
+
+Verifikasi konfigurasi:
+
+```sh
+iptables -t nat -S
+iptables -t nat -L POSTROUTING -n -v
+```
+
+### Pembuktian Setelah Perbaikan
+
+Pada Unit-01:
+
+```sh
+ping -c 3 8.8.8.8
+ping -c 3 192.239.4.74
+```
+
+Pada Spy:
+
+```sh
+ping -c 3 8.8.8.8
+```
+
+Pada Gendou:
+
+```sh
+iptables -t nat -L POSTROUTING -n -v
+```
+
+Hasil yang diharapkan:
+
+| Pengujian | Hasil |
+|---|---|
+| Unit-01 menuju 8.8.8.8 | 0% packet loss |
+| Unit-01 menuju Lilith | 0% packet loss |
+| Spy menuju 8.8.8.8 | 0% packet loss |
+| Counter MASQUERADE | Meningkat ketika koneksi baru diproses |
+
+![Pengujian Setelah Perbaikan NAT Unit-01 (1)](screenshots/no10_unit-01_1.png)
+
+![Pengujian Setelah Perbaikan NAT Unit-01 (2)](screenshots/no10_unit-01_2.png)
+
+![Pengujian Setelah Perbaikan NAT Spy](screenshots/no10_spy.png)
+
+### Lokasi Translasi Alamat Sumber
+
+```mermaid
+flowchart LR
+    A["Unit-01<br/>192.239.4.66"]
+    B["Misato"]
+    C["Gendou<br/>MASQUERADE"]
+    D["NAT1"]
+    E["Internet"]
+
+    A --> B --> C --> D --> E
+```
+
+Paket dari Unit-01 diteruskan melalui Misato menuju Gendou dengan mempertahankan alamat sumber asli. Translasi alamat sumber dilakukan pada Gendou melalui chain POSTROUTING ketika paket keluar melalui interface eth0 menuju NAT1.
+
+---
+
 # SOAL 11 | Casper Harus Jadi Hantu
 
 Kelompok: K56 | Prefix IP: `192.239.x.x`
