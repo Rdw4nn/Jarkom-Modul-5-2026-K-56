@@ -987,7 +987,7 @@ Hasil yang diharapkan:
 - `ping -i 0.1 -c 15 192.239.4.74` dari `Tokyo3-Core` berhasil sepenuhnya (**`0% packet loss`**), membuktikan pembatasan hanya berlaku untuk trafik masuk dan tidak mengganggu trafik keluar.
 
 Screenshot:
-![Pengujian Ping Normal dan Ping Keluar Tokyo3-Core](assets/soal_15.png)
+![Pengujian Ping Normal dan Ping Keluar Tokyo3-Core](screenshot/soal_15.png)
 
 ## 5. Kesimpulan
 
@@ -1140,7 +1140,7 @@ Hasil yang diharapkan:
 
 * Kolom `pkts` pada baris aturan `LOG` (`LOG flags 0 level 4 prefix "SCAN-NERV: "`) dan baris `REJECT` (`reject-with tcp-reset`) meningkat menjadi minimal **`3`** paket, sesuai jumlah percobaan koneksi ke port `22`, `23`, dan `3306`.
 
-![Bukti no 17](screenshot/soal_16.png)
+![Bukti no 16](screenshot/soal_16.png)
 
 ## 5. Kesimpulan
 
