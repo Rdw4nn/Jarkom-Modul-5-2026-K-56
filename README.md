@@ -337,7 +337,7 @@ ip -br a
 sysctl net.ipv4.ip_forward
 ```
 
-![Konfigurasi IP Address Router Fuyutsuki](screenshots/no2_fuyutsuki.png)
+![Konfigurasi IP Address Router Fuyutsuki](screenshot/no2_fuyutsuki.png)
 
 Pengujian konektivitas dilakukan dua arah pada seluruh 16 link antar-router.
 
@@ -376,7 +376,7 @@ ping -c 3 192.239.4.134
 
 Setiap link diuji dari kedua ujungnya dengan target `0% packet loss`.
 
-![Pengujian Ping Antar-Router Yui](screenshots/no2_yui.png)
+![Pengujian Ping Antar-Router Yui](screenshot/no2_yui.png)
 
 ---
 
@@ -499,7 +499,7 @@ Jalur routing yang dilalui:
 
 Hasil yang diharapkan adalah ketiga tujuan dapat dijangkau dengan `0% packet loss`.
 
-![Pengujian Static Routing](screenshots/no3_armisael.png)
+![Pengujian Static Routing](screenshot/no3_armisael.png)
 
 ---
 
@@ -582,7 +582,7 @@ iptables -t nat -L POSTROUTING -n -v
 
 Kolom `pkts` dan `bytes` pada rule MASQUERADE diharapkan meningkat setelah koneksi baru dari jaringan internal diproses melalui NAT.
 
-![Pengujian Internet dan Counter NAT](screenshots/no4_gendou_lilith.png)
+![Pengujian Internet dan Counter NAT](screenshot/no4_gendou_lilith.png)
 
 ---
 
@@ -673,7 +673,7 @@ Hasil pengujian:
 -A FORWARD -s 192.239.0.0/21 -d 192.239.0.0/21 ! -i eth0 ! -o eth0 -j ACCEPT
 ```
 
-![Konfigurasi Firewall Gendou](screenshots/no5_gendou.png)
+![Konfigurasi Firewall Gendou](screenshot/no5_gendou.png)
 
 Pengujian akses internet dilakukan pada Armisael:
 
@@ -683,7 +683,7 @@ ping -c 3 8.8.8.8
 
 Meskipun default policy INPUT dan FORWARD menggunakan DROP, jaringan internal tetap diizinkan mengakses internet melalui aturan ACCEPT yang telah ditentukan.
 
-![Pengujian Internet Setelah Firewall](screenshots/no5_armisael.png)
+![Pengujian Internet Setelah Firewall](screenshot/no5_armisael.png)
 
 ---
 
@@ -768,9 +768,9 @@ Perintah `ip -br a` digunakan untuk menampilkan IP address, sedangkan `ip route`
 
 Ping menuju `192.239.4.65` digunakan untuk membuktikan konektivitas Unit-01 dengan gateway.
 
-![Konfigurasi IP Statis Unit-01](screenshots/no6_unit-01_1.png)
+![Konfigurasi IP Statis Unit-01](screenshot/no6_unit-01_1.png)
 
-![Pengujian Gateway Unit-01](screenshots/no6_unit-01_2.png)
+![Pengujian Gateway Unit-01](screenshot/no6_unit-01_2.png)
 
 Untuk membuktikan sifat permanen konfigurasi, IP address dan default gateway perlu tetap tersedia setelah node di-restart tanpa menjalankan script secara manual.
 
@@ -893,13 +893,13 @@ Pesan yang diharapkan muncul pada masing-masing terminal listener:
 
 Pada pengujian awal, koneksi menuju port 5001 Magi-Balthasar sempat menghasilkan `Connection refused`. Listener kemudian perlu diaktifkan kembali pada port 5001 sebelum pengiriman pesan dilakukan ulang.
 
-![Pengiriman Pesan dari Lilith](screenshots/no7_lilith.png)
+![Pengiriman Pesan dari Lilith](screenshot/no7_lilith.png)
 
-![Penerimaan Pesan pada Magi-Casper](screenshots/no7_magi-casper.png)
+![Penerimaan Pesan pada Magi-Casper](screenshot/no7_magi-casper.png)
 
-![Penerimaan Pesan pada Magi-Balthasar](screenshots/no7_magi-balthasar.png)
+![Penerimaan Pesan pada Magi-Balthasar](screenshot/no7_magi-balthasar.png)
 
-![Penerimaan Pesan pada Magi-Melchior](screenshots/no7_magi-melchior.png)
+![Penerimaan Pesan pada Magi-Melchior](screenshot/no7_magi-melchior.png)
 
 ---
 
@@ -940,9 +940,9 @@ connect to [192.239.3.195] from (UNKNOWN) [192.239.4.74] 33270
 listening on [any] 80 ...
 ```
 
-![Listener Pen-Pen 1](screenshots/no8_pen-pen_1.png)
+![Listener Pen-Pen 1](screenshot/no8_pen-pen_1.png)
 
-![Listener Pen-Pen 2](screenshots/no8_pen-pen_2.png)
+![Listener Pen-Pen 2](screenshot/no8_pen-pen_2.png)
 
 ### Konfigurasi Tokyo3-Core
 
@@ -1012,7 +1012,7 @@ Port 80 dan 8080 memberikan respons karena terdapat TCP listener yang aktif. Por
 
 Pesan `inverse host lookup failed` tidak memengaruhi hasil pengujian karena koneksi dilakukan menggunakan alamat IP secara langsung.
 
-![Pengujian Baseline Service dari Lilith](screenshots/no8_lilith.png)
+![Pengujian Baseline Service dari Lilith](screenshot/no8_lilith.png)
 
 ---
 
@@ -1090,7 +1090,7 @@ Pemeriksaan difokuskan pada kemungkinan gangguan berikut:
 
 Temuan aktual disesuaikan dengan hasil enumerasi Shigeru setelah script sabotase dijalankan.
 
-![Identifikasi Gangguan Routing Shigeru](screenshots/no9_shigeru_before.png)
+![Identifikasi Gangguan Routing Shigeru](screenshot/no9_shigeru_before.png)
 
 ### Perbaikan Routing
 
@@ -1136,7 +1136,7 @@ default via 192.239.4.125 dev eth0
 192.239.4.168/30 dev eth2
 ```
 
-![Konfigurasi Routing Setelah Perbaikan](screenshots/no9_shigeru_after.png)
+![Konfigurasi Routing Setelah Perbaikan](screenshot/no9_shigeru_after.png)
 
 Pengujian kembali dilakukan dari Lilith:
 
@@ -1146,9 +1146,9 @@ ping -c 3 192.239.4.83
 
 Hasil yang diharapkan setelah perbaikan adalah Lilith dapat kembali berkomunikasi dengan Armisael dengan `0% packet loss`.
 
-![Pengujian Lilith Menuju Armisael 1](screenshots/no9_lilith_1.png)
+![Pengujian Lilith Menuju Armisael 1](screenshot/no9_lilith_1.png)
 
-![Pengujian Lilith Menuju Armisael 2](screenshots/no9_lilith_2.png)
+![Pengujian Lilith Menuju Armisael 2](screenshot/no9_lilith_2.png)
 
 ---
 
@@ -1228,7 +1228,7 @@ Pemeriksaan difokuskan pada aturan SNAT, RETURN, dan MASQUERADE yang terdapat pa
 
 Aturan yang menyebabkan gangguan diidentifikasi berdasarkan output aktual tabel NAT setelah sabotase.
 
-![Identifikasi Gangguan NAT](screenshots/no10_misato_before.png)
+![Identifikasi Gangguan NAT](screenshot/no10_misato_before.png)
 
 ### Perbaikan NAT pada Misato
 
@@ -1247,7 +1247,7 @@ Verifikasi:
 iptables -t nat -S
 ```
 
-![Perbaikan NAT pada Misato](screenshots/no10_misato_after.png)
+![Perbaikan NAT pada Misato](screenshot/no10_misato_after.png)
 
 ### Perbaikan NAT pada Gendou
 
@@ -1304,11 +1304,11 @@ Hasil yang diharapkan:
 | Spy menuju 8.8.8.8 | 0% packet loss |
 | Counter MASQUERADE | Meningkat ketika koneksi baru diproses |
 
-![Pengujian Setelah Perbaikan NAT Unit-01 (1)](screenshots/no10_unit-01_1.png)
+![Pengujian Setelah Perbaikan NAT Unit-01 (1)](screenshot/no10_unit-01_1.png)
 
-![Pengujian Setelah Perbaikan NAT Unit-01 (2)](screenshots/no10_unit-01_2.png)
+![Pengujian Setelah Perbaikan NAT Unit-01 (2)](screenshot/no10_unit-01_2.png)
 
-![Pengujian Setelah Perbaikan NAT Spy](screenshots/no10_spy.png)
+![Pengujian Setelah Perbaikan NAT Spy](screenshot/no10_spy.png)
 
 ### Lokasi Translasi Alamat Sumber
 
